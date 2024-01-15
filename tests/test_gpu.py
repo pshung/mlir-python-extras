@@ -7,7 +7,7 @@ from mlir.dialects._gpu_enum_gen import AllReduceOperation
 import mlir.extras.types as T
 from mlir.extras.ast.canonicalize import canonicalize
 from mlir.extras.dialects.ext.arith import constant
-from mlir.extras.dialects.ext.func import func
+from mlir.extras.dialects.ext.func import toMLIRFunc
 from mlir.extras.dialects.ext.llvm import llvm_ptr_t
 
 from mlir.extras.dialects.ext.gpu import (
@@ -226,7 +226,7 @@ def test_class_call_from_func(ctx: MLIRContext):
         def test(self):
             pass
 
-    @func(emit=True)
+    @toMLIRFunc(emit=True)
     @canonicalize(using=canonicalizer)
     def main():
         a = alloc((M, N), T.f32())
@@ -299,7 +299,7 @@ def test_async_object(ctx: MLIRContext):
         def test(self):
             pass
 
-    @func(emit=True)
+    @toMLIRFunc(emit=True)
     @canonicalize(using=canonicalizer)
     def main():
         a = alloc((M, N), T.f32())
@@ -349,7 +349,7 @@ def test_async_object(ctx: MLIRContext):
 
 
 def test_launch_op(ctx: MLIRContext):
-    @func(emit=True)
+    @toMLIRFunc(emit=True)
     def main():
         data = alloc((2, 6), T.i32())
         sum = alloc((2,), T.i32())
@@ -439,7 +439,7 @@ def test_launch_op(ctx: MLIRContext):
 
 
 def test_launch_op_reduce_op(ctx: MLIRContext):
-    @func(emit=True)
+    @toMLIRFunc(emit=True)
     def main():
         data = alloc((2, 6), T.i32())
         sum = alloc((2,), T.i32())

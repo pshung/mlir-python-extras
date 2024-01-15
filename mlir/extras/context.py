@@ -16,28 +16,40 @@ class MLIRContext:
 
 
 @contextmanager
-def mlir_mod_ctx(
-    src: Optional[str] = None,
-    context: ir.Context = None,
-    location: ir.Location = None,
+def ContextManager(
+    loc: ir.Location = None,
     allow_unregistered_dialects=False,
 ) -> MLIRContext:
-    if context is None:
-        context = ir.Context()
+    """
+    A context manger for MLIR's Context, Location, Module and InsertionPoint.
+    This acts as a syntax surgar to the following "with" statement.
+    with ir.Context() as ctx:
+        module = ir.Module.create()
+        with ir.InsertionPoint(module.body), ir.Location.unknown()):
+            ...
+            ...
+            ...
+    This returns a MLIRContext object so that users can call __enter__ and __exit__ at their disposal.
+    usage:
+    ctx = ContextManager()
+    ctx.__enter__()
+    ...MLIR IR builder
+    ctx.__exit__()
+    """
+    context = ir.Context()
     if allow_unregistered_dialects:
         context.allow_unregistered_dialects = True
+
     with ExitStack() as stack:
         stack.enter_context(context)
-        if location is None:
-            location = ir.Location.unknown()
-        stack.enter_context(location)
-        if src is not None:
-            module = ir.Module.parse(src)
-        else:
-            module = ir.Module.create()
+        if loc is None:
+            loc = ir.Location.unknown()
+        stack.enter_context(loc)
+        module = ir.Module.create()
         ip = ir.InsertionPoint(module.body)
         stack.enter_context(ip)
         yield MLIRContext(context, module)
+
     context._clear_live_operations()
 
 

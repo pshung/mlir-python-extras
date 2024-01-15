@@ -25,10 +25,12 @@ def ast_call(name, args=None, keywords=None):
     return call
 
 
-def get_module_cst(f):
-    f_src = dedent(inspect.getsource(f))
-    # tree = cst.parse_module(f_src)
-    tree = ast.parse(f_src)
+def get_function_ast(f):
+    """
+    return the AST of the given function
+    """
+    src = dedent(inspect.getsource(f))
+    tree = ast.parse(src)
     assert isinstance(
         tree.body[0], ast.FunctionDef
     ), f"unexpected ast node {tree.body[0]}"

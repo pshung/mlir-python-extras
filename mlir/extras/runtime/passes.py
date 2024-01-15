@@ -86,9 +86,7 @@ def run_pipeline(
 class Pipeline:
     _pipeline: List[str] = []
 
-    def __init__(self, pipeline=None, wrapper=None):
-        if pipeline is None:
-            pipeline = []
+    def __init__(self, pipeline = [], wrapper = None):
         self._pipeline = pipeline
 
     def Func(self, p: "Pipeline"):

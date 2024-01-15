@@ -8,12 +8,12 @@ from abc import ABC, abstractmethod
 from dis import findlinestarts
 from opcode import opmap
 from types import CodeType
-from typing import List, Union
+from typing import List, Union, Callable
 
 import astunparse
 from bytecode import ConcreteBytecode
 
-from ..ast.util import get_module_cst, copy_func
+from ..ast.util import get_function_ast, copy_func
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +31,11 @@ class StrictTransformer(Transformer):
 
 
 def transform_func(f, *transformer_ctors: type(Transformer)):
-    module = get_module_cst(f)
+    ast_module = get_function_ast(f)
     context = types.SimpleNamespace()
     for transformer_ctor in transformer_ctors:
-        orig_code = astunparse.unparse(module)
-        func_node = module.body[0]
+        orig_code = astunparse.unparse(ast_module)
+        func_node = ast_module.body[0]
         replace = transformer_ctor(
             context=context, first_lineno=f.__code__.co_firstlineno - 1
         )
@@ -52,11 +52,11 @@ def transform_func(f, *transformer_ctors: type(Transformer)):
         )
         logger.debug("[transformed code diff]\n%s", "\n" + "\n".join(diff))
         logger.debug("[transformed code]\n%s", new_code)
-        module.body[0] = func_node
+        ast_module.body[0] = func_node
 
     logger.debug("[final transformed code]\n\n%s", new_code)
 
-    return module
+    return ast_module
 
 
 def transform_ast(
@@ -112,18 +112,19 @@ class BytecodePatcher(ABC):
 def patch_bytecode(f, patchers: List[type(BytecodePatcher)] = None):
     if patchers is None:
         return f
-    code = ConcreteBytecode.from_code(f.__code__)
+
+    bytecode = ConcreteBytecode.from_code(f.__code__)
     context = types.SimpleNamespace()
     for patcher in patchers:
-        code = patcher(context).patch_bytecode(code, f)
+        bytecode = patcher(context).patch_bytecode(bytecode, f)
 
-    return copy_func(f, code.to_code())
+    return copy_func(f, bytecode.to_code())
 
 
 class Canonicalizer(ABC):
     @property
     @abstractmethod
-    def cst_transformers(self) -> List[StrictTransformer]:
+    def ast_transformers(self) -> List[StrictTransformer]:
         pass
 
     @property
@@ -133,8 +134,11 @@ class Canonicalizer(ABC):
 
 
 def canonicalize(*, using: Canonicalizer):
-    def wrapper(f):
-        f = transform_ast(f, using.cst_transformers)
+    """
+    A decorator to transform function AST and patch Python byte code
+    """
+    def wrapper(f : Callable):
+        f = transform_ast(f, using.ast_transformers)
         f = patch_bytecode(f, using.bytecode_patchers)
         return f
 

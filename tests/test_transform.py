@@ -19,7 +19,7 @@ from mlir.ir import UnitAttr
 from mlir.extras import types as T
 from mlir.extras.ast.canonicalize import canonicalize
 from mlir.extras.dialects.ext import linalg
-from mlir.extras.dialects.ext.func import func
+from mlir.extras.dialects.ext.func import toMLIRFunc
 from mlir.extras.dialects.ext.gpu import block_attr, thread_attr
 from mlir.extras.dialects.ext.scf import (
     range_,
@@ -41,7 +41,7 @@ pytest.mark.usefixtures("ctx")
 
 
 def test_basic_unroll(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def loop_unroll_op():
         for i in range_(0, 42, 5):
@@ -118,7 +118,7 @@ def test_basic_unroll(ctx: MLIRContext):
 
 
 def test_basic_tile(ctx):
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def pad_tensor_3_4(input_tensor: T.tensor(4, 16, T.f32()), pad_value: T.f32()):
         @pad(input_tensor, [3, 4], [5, 3])
@@ -232,7 +232,7 @@ def test_basic_tile(ctx):
 
 
 def test_linalg_tile(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def matmul(
         arg0: T.tensor(4, 16, T.f32()),
@@ -305,7 +305,7 @@ def test_linalg_tile(ctx: MLIRContext):
 
 
 def test_simple_matmul_tile_foreach_thread(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def matmul(
         arg0: T.tensor(4, 16, T.f32()),
@@ -380,7 +380,7 @@ def test_simple_matmul_tile_foreach_thread(ctx: MLIRContext):
 
 
 def test_common_extension_sugar(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def select_cmp_eq_select(arg0: T.i64(), arg1: T.i64()):
         a = arg0 == arg1
@@ -442,7 +442,7 @@ def test_common_extension_sugar(ctx: MLIRContext):
 def test_apply_cse(ctx: MLIRContext):
     M, N, K = 3, 5, 3
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def matmul(
         A: T.tensor(M, N, T.f32()),
@@ -532,7 +532,7 @@ def test_two_schedules(ctx: MLIRContext):
     C_i, C_o = 1, 3
     K = 3
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def conv_2d_nhwc_hwcf(
         input: T.tensor(N, C_i, H, W, T.f32()),

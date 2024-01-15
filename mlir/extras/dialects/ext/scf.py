@@ -629,7 +629,7 @@ class RemoveJumpsAndInsertGlobals(BytecodePatcher):
 
 
 class SCFCanonicalizer(Canonicalizer):
-    cst_transformers = [
+    ast_transformers = [
         CanonicalizeElIfs,
         InsertEmptyYield,
         ReplaceYieldWithSCFYield,

@@ -228,7 +228,7 @@ class FuncBase:
 
 
 @make_maybe_no_args_decorator
-def func(
+def toMLIRFunc(
     f,
     *,
     sym_visibility=None,

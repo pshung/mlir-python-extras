@@ -7,8 +7,8 @@ import mlir.extras.types as T
 from mlir.extras.ast.canonicalize import canonicalize
 from mlir.extras.context import MLIRContext, mlir_mod_ctx
 from mlir.extras.dialects.ext.arith import constant
-from mlir.extras.dialects.ext.func import func
-from mlir.extras.dialects.ext.scf import canonicalizer as scf, range_ as range
+from mlir.extras.dialects.ext.func import toMLIRFunc
+from mlir.extras.dialects.ext.scf import canonicalizer as scf_canonicalizer, range_ as range
 from mlir.extras.runtime.passes import Pipeline
 from mlir.extras.runtime.refbackend import LLVMJITBackend
 
@@ -17,8 +17,8 @@ def setting_memref(ctx: MLIRContext, backend: LLVMJITBackend):
     K = 10
     memref_i64 = T.memref(K, K, T.i64())
 
-    @func
-    @canonicalize(using=scf)
+    @toMLIRFunc
+    @canonicalize(using=scf_canonicalizer)
     def memfoo(A: memref_i64, B: memref_i64, C: memref_i64):
         one = constant(1)
         two = constant(2)

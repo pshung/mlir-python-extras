@@ -7,7 +7,7 @@ import pytest
 import mlir.extras.types as T
 from mlir.extras.context import mlir_mod_ctx
 from mlir.extras.dialects.ext.arith import constant
-from mlir.extras.dialects.ext.func import func
+from mlir.extras.dialects.ext.func import toMLIRFunc
 
 # noinspection PyUnresolvedReferences
 from mlir.extras.testing import mlir_ctx as ctx, filecheck, MLIRContext
@@ -17,7 +17,7 @@ pytest.mark.usefixtures("ctx")
 
 
 def test_emit(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def demo_fun1():
         one = constant(1)
         return one
@@ -53,19 +53,19 @@ def test_declare_byte_rep(ctx: MLIRContext):
 
 
 def test_declare(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def demo_fun1() -> T.i32():
         ...
 
-    @func
+    @toMLIRFunc
     def demo_fun2() -> (T.i32(), T.i32()):
         ...
 
-    @func
+    @toMLIRFunc
     def demo_fun3(x: T.i32()) -> (T.i32(), T.i32()):
         ...
 
-    @func
+    @toMLIRFunc
     def demo_fun4(x: T.i32(), y: T.i32()) -> (T.i32(), T.i32()):
         ...
 
@@ -95,7 +95,7 @@ def test_declare(ctx: MLIRContext):
 
 
 def test_func_base_meta(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return one
@@ -129,7 +129,7 @@ def test_func_base_meta(ctx: MLIRContext):
 
 
 def test_func_base_meta2(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return one
@@ -150,7 +150,7 @@ def test_func_base_meta2(ctx: MLIRContext):
 
 
 def test_func_no_context():
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return one

@@ -270,10 +270,10 @@ def make_maybe_no_args_decorator(decorator):
     @wraps(decorator)
     def new_dec(*args, **kwargs):
         if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
-            # actual decorated function
+            # args[0] is an actual decorated function
             return decorator(args[0])
         else:
-            # decorator arguments
+            # args are decorator arguments
             return lambda realf: decorator(realf, *args, **kwargs)
 
     return new_dec

@@ -13,7 +13,7 @@ from mlir.extras.ast.canonicalize import canonicalize
 from mlir.extras.dialects.ext import linalg
 from mlir.dialects.arith import sitofp, index_cast
 from mlir.extras.dialects.ext.arith import constant
-from mlir.extras.dialects.ext.func import func
+from mlir.extras.dialects.ext.func import toMLIRFunc
 from mlir.extras.dialects.ext.memref import load, store, S
 from mlir.extras.dialects.ext.scf import (
     canonicalizer,
@@ -42,11 +42,11 @@ def test_smoke(ctx: MLIRContext, backend: LLVMJITBackend, capfd):
     # TODO(max): ValueError: foo requires closure of length 0, not 1
     unranked_memref_f32 = T.memref(element_type=T.f32())
 
-    @func
+    @toMLIRFunc
     def printMemrefF32(x: unranked_memref_f32):
         ...
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def foo(x: unranked_memref_f32):
         printMemrefF32(x)
@@ -102,13 +102,13 @@ def test_munge_calling_conventions(ctx: MLIRContext, backend: LLVMJITBackend, ca
     ranked_memref_2x2_f32 = T.memref(2, 2, T.f32())
     unranked_memref_f32 = T.memref(element_type=T.f32())
 
-    @func
+    @toMLIRFunc
     def foo(x: ranked_memref_2x2_f32):
         return x
 
     foo.emit()
 
-    @func(
+    @toMLIRFunc(
         func_attrs={
             "llvm.emit_c_interface": UnitAttr.get(),
             refback_cb_attr: UnitAttr.get(),
@@ -117,7 +117,7 @@ def test_munge_calling_conventions(ctx: MLIRContext, backend: LLVMJITBackend, ca
     def refbackend_consume_return_callback_first(x: unranked_memref_f32):
         ...
 
-    @func
+    @toMLIRFunc
     def foo_wrapper(x: unranked_memref_f32):
         x = cast(ranked_memref_2x2_f32, x)
         y = foo(x)
@@ -152,13 +152,13 @@ def test_munge_calling_conventions_setup(
     ranked_memref_4x4_f32 = T.memref(4, 4, T.f32())
     unranked_memref_f32 = T.memref(element_type=T.f32())
 
-    @func
+    @toMLIRFunc
     def foo(x: ranked_memref_4x4_f32):
         return x
 
     foo.emit()
 
-    @func(
+    @toMLIRFunc(
         func_attrs={
             "llvm.emit_c_interface": UnitAttr.get(),
             refback_cb_attr: UnitAttr.get(),
@@ -167,7 +167,7 @@ def test_munge_calling_conventions_setup(
     def cb(x: unranked_memref_f32):
         ...
 
-    @func
+    @toMLIRFunc
     def foo_wrapper(x: unranked_memref_f32):
         x = cast(ranked_memref_4x4_f32, x)
         y = foo(x)
@@ -208,7 +208,7 @@ def test_munge_calling_conventions_setup_mutate(
     ranked_memref_4x4_f32 = T.memref(4, 4, T.f32())
     unranked_memref_f32 = T.memref(element_type=T.f32())
 
-    @func
+    @toMLIRFunc
     def foo(x: ranked_memref_4x4_f32):
         el = load(x, (0, 0))
         el = el * constant(2.0, T.f32())
@@ -217,7 +217,7 @@ def test_munge_calling_conventions_setup_mutate(
 
     foo.emit()
 
-    @func(
+    @toMLIRFunc(
         func_attrs={
             "llvm.emit_c_interface": UnitAttr.get(),
             refback_cb_attr: UnitAttr.get(),
@@ -226,7 +226,7 @@ def test_munge_calling_conventions_setup_mutate(
     def cb(x: unranked_memref_f32):
         ...
 
-    @func
+    @toMLIRFunc
     def foo_wrapper(x: unranked_memref_f32):
         x = cast(ranked_memref_4x4_f32, x)
         y = foo(x)
@@ -293,7 +293,7 @@ def test_munge_calling_conventions_setup_auto_cb(
     ranked_memref_4x4_f32 = T.memref(4, 4, T.f32())
     unranked_memref_f32 = T.memref(element_type=T.f32())
 
-    @func
+    @toMLIRFunc
     def foo(x: ranked_memref_4x4_f32):
         el = load(x, (0, 0))
         el = el * constant(2.0, T.f32())
@@ -302,7 +302,7 @@ def test_munge_calling_conventions_setup_auto_cb(
 
     foo.emit()
 
-    @func(
+    @toMLIRFunc(
         func_attrs={
             "llvm.emit_c_interface": UnitAttr.get(),
             refback_cb_attr: UnitAttr.get(),
@@ -311,7 +311,7 @@ def test_munge_calling_conventions_setup_auto_cb(
     def cb(x: unranked_memref_f32):
         ...
 
-    @func
+    @toMLIRFunc
     def foo_wrapper(x: unranked_memref_f32):
         x = cast(ranked_memref_4x4_f32, x)
         y = foo(x)
@@ -368,7 +368,7 @@ def test_munge_calling_conventions_setup_auto_cb_auto_wrapper(
 ):
     ranked_memref_4x4_f32 = T.memref(4, 4, T.f32())
 
-    @func
+    @toMLIRFunc
     def foo(x: ranked_memref_4x4_f32):
         el = load(x, (0, 0))
         el = el * constant(2.0, T.f32())
@@ -418,7 +418,7 @@ def test_munge_calling_conventions_setup_auto_cb_auto_wrapper_run(
 ):
     ranked_memref_4x4_f32 = T.memref(4, 4, T.f32())
 
-    @func
+    @toMLIRFunc
     def foo(x: ranked_memref_4x4_f32):
         el = load(x, (0, 0))
         el = el * constant(2.0, T.f32())
@@ -452,11 +452,11 @@ def test_munge_calling_conventions_setup_auto_cb_auto_wrapper_run_cast_np_array(
     ranked_memref_4x4_f32 = T.memref(4, 4, T.f32())
     unranked_memref_f32 = T.memref(element_type=T.f32())
 
-    @func
+    @toMLIRFunc
     def printMemrefF32(x: unranked_memref_f32):
         ...
 
-    @func
+    @toMLIRFunc
     def foo(x: ranked_memref_4x4_f32):
         el = load(x, (0, 0))
         el = el * constant(2.0, T.f32())
@@ -496,7 +496,7 @@ def test_setting_memref_diagonal(ctx: MLIRContext, backend: LLVMJITBackend):
     K = 10
     ranked_memref_kxk_f32 = T.memref(K, K, T.f32())
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def memfoo(mem: ranked_memref_kxk_f32):
         for i, it_mem in range_(0, K, iter_args=[mem]):
@@ -527,7 +527,7 @@ def test_setting_memref_diagonal_no_iter(ctx: MLIRContext, backend: LLVMJITBacke
     K = 10
     ranked_memref_kxk_f32 = T.memref(K, K, T.f32())
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def memfoo(mem: ranked_memref_kxk_f32):
         for i in range_(0, K):
@@ -554,7 +554,7 @@ def test_memref_double_loop(ctx: MLIRContext, backend: LLVMJITBackend):
     K = 10
     ranked_memref_kxk_f32 = T.memref(K, K, T.f32())
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def memfoo(mem: ranked_memref_kxk_f32):
         for i, it_mem in range_(0, K, iter_args=[mem]):
@@ -596,7 +596,7 @@ def test_memref_double_loop_no_iter(ctx: MLIRContext, backend: LLVMJITBackend):
     K = 10
     ranked_memref_kxk_f32 = T.memref(K, K, T.f32())
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def memfoo(mem: ranked_memref_kxk_f32):
         for i in range_(0, K):
@@ -637,7 +637,7 @@ def _memref_tiled_add(K, D, ctx: MLIRContext, backend: LLVMJITBackend):
     layout = StridedLayoutAttr.get(S, (K, 1))
     ranked_memref_dxd_f32 = T.memref(D, D, T.f32(), layout=layout)
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def tile(
         A: ranked_memref_dxd_f32, B: ranked_memref_dxd_f32, C: ranked_memref_dxd_f32
@@ -648,7 +648,7 @@ def _memref_tiled_add(K, D, ctx: MLIRContext, backend: LLVMJITBackend):
 
     tile.emit()
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def memfoo(
         A: ranked_memref_kxk_f32, B: ranked_memref_kxk_f32, C: ranked_memref_kxk_f32
@@ -759,7 +759,7 @@ def test_linalg(ctx: MLIRContext, backend: LLVMJITBackend):
     F = K // D
     ranked_memref_kxk_f32 = T.memref(K, K, T.f32())
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def memfoo(
         A: ranked_memref_kxk_f32, B: ranked_memref_kxk_f32, C: ranked_memref_kxk_f32
@@ -829,7 +829,7 @@ def test_linalg_tensor(ctx: MLIRContext, backend: LLVMJITBackend):
     F = K // D
     ranked_tensor_kxk_f32 = T.tensor(K, K, T.f32())
 
-    @func
+    @toMLIRFunc
     @canonicalize(using=canonicalizer)
     def tenfoo(
         A: ranked_tensor_kxk_f32, B: ranked_tensor_kxk_f32, C: ranked_tensor_kxk_f32

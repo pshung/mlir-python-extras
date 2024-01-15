@@ -11,7 +11,7 @@ from mlir.dialects.builtin import module
 from mlir.extras.dialects.ext import linalg, memref
 from mlir.extras.dialects.ext.arith import constant
 from mlir.extras.dialects.ext.cf import br, cond_br
-from mlir.extras.dialects.ext.func import func
+from mlir.extras.dialects.ext.func import toMLIRFunc
 from mlir.extras.dialects.ext.memref import alloca_scope
 from mlir.extras.dialects.ext.scf import execute_region
 from mlir.extras.dialects.ext.tensor import S, generate
@@ -77,7 +77,7 @@ def test_no_args_decorator(ctx: MLIRContext):
 
 
 def test_func(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def demo_fun1():
         one = constant(1)
         return one
@@ -135,7 +135,7 @@ def test_empty_results_list(ctx: MLIRContext):
     one = constant(1, T.index())
     two = constant(2, T.index())
 
-    @func
+    @toMLIRFunc
     def demo_fun1():
         mem1 = memref.alloc((10, 10), T.f32())
         mem2 = memref.alloc((10, 10), T.f32())
@@ -164,7 +164,7 @@ def test_empty_results_list(ctx: MLIRContext):
 
 
 def test_bbs(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([one])
@@ -191,7 +191,7 @@ def test_bbs(ctx: MLIRContext):
 
 
 def test_bbs_multiple(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([one])
@@ -224,7 +224,7 @@ def test_bbs_multiple(ctx: MLIRContext):
 
 
 def test_bbs_br(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([])
@@ -261,7 +261,7 @@ def test_bbs_br(ctx: MLIRContext):
 
 
 def test_bbs_br_loop(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([])
@@ -299,7 +299,7 @@ def test_bbs_br_loop(ctx: MLIRContext):
 
 
 def test_bbs_br_loop_arg(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([])
@@ -339,7 +339,7 @@ def test_bbs_br_loop_arg(ctx: MLIRContext):
 
 
 def test_bbs_br_two_preds(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([])
@@ -379,7 +379,7 @@ def test_bbs_br_two_preds(ctx: MLIRContext):
 
 
 def test_bbs_cond_br(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([])
@@ -420,7 +420,7 @@ def test_bbs_cond_br(ctx: MLIRContext):
 
 
 def test_bbs_cond_br_operands(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([])
@@ -463,7 +463,7 @@ def test_bbs_cond_br_operands(ctx: MLIRContext):
     filecheck(correct, ctx.module)
 
 
-@func(emit=False, sym_visibility="private")
+@toMLIRFunc(emit=False, sym_visibility="private")
 def matmul_i16_i16(
     A: "T.memref(64, 32, T.i16())",
     B: "T.memref(32, 64, T.i16())",
@@ -522,7 +522,7 @@ def test_defer_emit_2(ctx: MLIRContext):
 
 
 def test_successor_ctx_manager(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def foo1():
         one = constant(1)
         return_([])

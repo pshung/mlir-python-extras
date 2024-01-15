@@ -4,7 +4,7 @@ import pytest
 
 import mlir.extras.types as T
 from mlir.extras.dialects.ext.arith import constant
-from mlir.extras.dialects.ext.func import func
+from mlir.extras.dialects.ext.func import toMLIRFunc
 from mlir.extras.dialects.ext.nvgpu import tensormap_descriptor
 from mlir.dialects.memref import cast
 from mlir.dialects.nvgpu import tma_create_descriptor
@@ -17,7 +17,7 @@ pytest.mark.usefixtures("ctx")
 
 
 def test_basic(ctx: MLIRContext):
-    @func
+    @toMLIRFunc
     def create_tensor_map(
         device_ptr_2d: T.memref(64, 128, element_type=T.f32()),
     ):
