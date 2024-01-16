@@ -5,7 +5,7 @@ import numpy as np
 import mlir.extras.dialects.ext.memref
 import mlir.extras.types as T
 from mlir.extras.ast.canonicalize import canonicalize
-from mlir.extras.context import MLIRContext, mlir_mod_ctx
+from mlir.extras.context import MLIRContext, ContextManager
 from mlir.extras.dialects.ext.arith import constant
 from mlir.extras.dialects.ext.func import toMLIRFunc
 from mlir.extras.dialects.ext.scf import canonicalizer as scf_canonicalizer, range_ as range
@@ -48,5 +48,5 @@ def setting_memref(ctx: MLIRContext, backend: LLVMJITBackend):
     assert np.array_equal(A * B, C)
 
 
-with mlir_mod_ctx() as ctx:
+with MLIRContext() as ctx:
     setting_memref(ctx, LLVMJITBackend())

@@ -9,7 +9,7 @@ from textwrap import dedent
 
 import pytest
 
-from ..context import MLIRContext, mlir_mod_ctx
+from ..context import MLIRContext, ContextManager
 from .generate_test_checks import main
 from ..runtime.refbackend import LLVMJITBackend
 
@@ -55,7 +55,7 @@ def filecheck(correct: str, module):
 
 @pytest.fixture
 def mlir_ctx() -> MLIRContext:
-    with mlir_mod_ctx(allow_unregistered_dialects=True) as ctx:
+    with ContextManager(allow_unregistered_dialects=True) as ctx:
         yield ctx
 
 

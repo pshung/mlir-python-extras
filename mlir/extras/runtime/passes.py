@@ -4,7 +4,7 @@ import sys
 import tempfile
 from contextlib import ExitStack
 from io import StringIO
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from ...ir import StringAttr, Module
 from ...passmanager import PassManager
@@ -24,69 +24,14 @@ def get_module_name_for_debug_dump(module):
     return StringAttr(module.operation.attributes["debug_module_name"]).value
 
 
-def run_pipeline(
-    module,
-    pipeline: str,
-    description: Optional[str] = None,
-    enable_ir_printing=False,
-    print_pipeline=False,
-    verify=True,
-):
-    module = Module.parse(str(module))
-
-    if isinstance(pipeline, Pipeline):
-        pipeline = str(pipeline)
-    """Runs `pipeline` on `module`, with a nice repro report if it fails."""
-    module_name = get_module_name_for_debug_dump(module)
-    try:
-        original_stderr = sys.stderr
-        sys.stderr = StringIO()
-        # Lower module in place to make it ready for compiler backends.
-        with ExitStack() as stack:
-            stack.enter_context(module.context)
-            asm_for_error_report = module.operation.get_asm(
-                large_elements_limit=10,
-                enable_debug_info=True,
-            )
-            pm = PassManager.parse(pipeline)
-            pm.enable_verifier(verify)
-            if print_pipeline:
-                print(pm)
-            if enable_ir_printing:
-                stack.enter_context(disable_multithreading())
-                pm.enable_ir_printing()
-
-            pm.run(module.operation)
-    except Exception as e:
-        print(e, file=sys.stderr)
-        filename = os.path.join(tempfile.gettempdir(), module_name + ".mlir")
-        with open(filename, "w") as f:
-            f.write(asm_for_error_report)
-        debug_options = "-mlir-print-ir-after-all -mlir-disable-threading"
-        description = description or f"{module_name} compile"
-
-        message = f"""\
-            {description} failed with the following diagnostics:
-
-            {'*' * 80}
-            {sys.stderr.getvalue().strip()}
-            {'*' * 80}
-
-            For developers, the error can be reproduced with:
-            $ mlir-opt {debug_options} -pass-pipeline='{pipeline}' {filename}
-            """
-        trimmed_message = "\n".join([m.lstrip() for m in message.split("\n")])
-        raise MlirCompilerError(trimmed_message)
-    finally:
-        sys.stderr = original_stderr
-
-    return module
 
 
 class Pipeline:
     _pipeline: List[str] = []
 
-    def __init__(self, pipeline = [], wrapper = None):
+    def __init__(self, pipeline = None, wrapper = None):
+        if pipeline is None:
+            pipeline = []
         self._pipeline = pipeline
 
     def Func(self, p: "Pipeline"):
@@ -3524,6 +3469,64 @@ class Pipeline:
         )
         return self
 
+def run_pipeline(
+    module,
+    pipeline: Union[str, Pipeline],
+    description: Optional[str] = None,
+    enable_ir_printing=False,
+    print_pipeline=False,
+    verify=True,
+) -> Module:
+    print(str(module))
+    module = Module.parse(str(module))
+
+    if isinstance(pipeline, Pipeline):
+        pipeline = str(pipeline)
+    """Runs `pipeline` on `module`, with a nice repro report if it fails."""
+    module_name = get_module_name_for_debug_dump(module)
+    try:
+        original_stderr = sys.stderr
+        sys.stderr = StringIO()
+        # Lower module in place to make it ready for compiler backends.
+        with ExitStack() as stack:
+            stack.enter_context(module.context)
+            asm_for_error_report = module.operation.get_asm(
+                large_elements_limit=10,
+                enable_debug_info=True,
+            )
+            pm = PassManager.parse(pipeline)
+            pm.enable_verifier(verify)
+            if print_pipeline:
+                print(pm)
+            if enable_ir_printing:
+                stack.enter_context(disable_multithreading())
+                pm.enable_ir_printing()
+
+            pm.run(module.operation)
+    except Exception as e:
+        print(e, file=sys.stderr)
+        filename = os.path.join(tempfile.gettempdir(), module_name + ".mlir")
+        with open(filename, "w") as f:
+            f.write(asm_for_error_report)
+        debug_options = "-mlir-print-ir-after-all -mlir-disable-threading"
+        description = description or f"{module_name} compile"
+
+        message = f"""\
+            {description} failed with the following diagnostics:
+
+            {'*' * 80}
+            {sys.stderr.getvalue().strip()}
+            {'*' * 80}
+
+            For developers, the error can be reproduced with:
+            $ mlir-opt {debug_options} -pass-pipeline='{pipeline}' {filename}
+            """
+        trimmed_message = "\n".join([m.lstrip() for m in message.split("\n")])
+        raise MlirCompilerError(trimmed_message)
+    finally:
+        sys.stderr = original_stderr
+
+    return module
 
 affine_data_copy_generate = Pipeline().affine_data_copy_generate
 affine_expand_index_ops = Pipeline().affine_expand_index_ops

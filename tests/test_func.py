@@ -5,7 +5,7 @@ from textwrap import dedent
 import pytest
 
 import mlir.extras.types as T
-from mlir.extras.context import mlir_mod_ctx
+from mlir.extras.context import ContextManager
 from mlir.extras.dialects.ext.arith import constant
 from mlir.extras.dialects.ext.func import toMLIRFunc
 
@@ -155,7 +155,7 @@ def test_func_no_context():
         one = constant(1)
         return one
 
-    with mlir_mod_ctx() as mod_ctx:
+    with ContextManager() as mod_ctx:
         foo1()
     correct = dedent(
         """\
