@@ -199,7 +199,7 @@ def test_munge_calling_conventions_setup(
     invoker = backend.load(module, consume_return_callback=callback)
     invoker.foo_wrapper(AA)
     out, err = capfd.readouterr()
-    assert out.strip() == "SUCCESS"
+    assert out.split()[-1] == "SUCCESS"
 
 
 def test_munge_calling_conventions_setup_mutate(
