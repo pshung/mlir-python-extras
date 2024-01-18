@@ -3477,7 +3477,6 @@ def run_pipeline(
     print_pipeline=False,
     verify=True,
 ) -> Module:
-    print(str(module))
     module = Module.parse(str(module))
 
     if isinstance(pipeline, Pipeline):
